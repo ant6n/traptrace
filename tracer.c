@@ -42,7 +42,7 @@ void trapHandler(int signo, siginfo_t *info, void *context) {
         offset += 2;
       }
       writeStr(")\n");
-      con->uc_mcontext.gregs[REG_EAX] = 0; // success!
+      con->uc_mcontext.gregs[REG_EAX] = 0; // return close-success
     }
     
     printSyscall(eax, ebx, ecx, edx, esi, edi);
@@ -83,7 +83,7 @@ void startTrace() {
   trapSa.sa_flags = SA_SIGINFO;
   trapSa.sa_sigaction = trapHandler;
   sigaction(SIGTRAP, &trapSa, NULL);
-
+  
   // set up exit signal handler
   exitSa.sa_flags = SA_SIGINFO;
   exitSa.sa_sigaction = exitHandler;
@@ -102,7 +102,5 @@ void stopTrace() {
   clearTrapFlag();
 
   printf("cycles: %lld\n", ccycle);
-  
-  //stopRecording();
 }
 
