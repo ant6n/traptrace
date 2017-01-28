@@ -17,8 +17,9 @@ void trapHandler(int signo, siginfo_t *info, void *context) {
   ucontext_t *con = (ucontext_t *)context;
   uint8_t* eip = (uint8_t*)con->uc_mcontext.gregs[REG_EIP];
   ccycle++;
-  if (0xcd == eip[0] || (eip[0] == 0x0f && eip[1] == 0x34)) {
-    uint8_t code = eip[1];
+  if ((   eip[0] == 0xcd && eip[1] == 0x80) // int 0x80
+      || (eip[0] == 0x0f && eip[1] == 0x34) // sysenter
+      )  {
     int eax = con->uc_mcontext.gregs[REG_EAX];
     int ebx = con->uc_mcontext.gregs[REG_EBX];
     int ecx = con->uc_mcontext.gregs[REG_ECX];
