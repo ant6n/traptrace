@@ -7,6 +7,7 @@
 #include "tracer.h"
 #include "helper.h"
 #include "syscallprinter.h"
+#include "instructionprinter.h"
 
 #define SYS_EXIT       0x01
 #define SYS_EXIT_GROUP 0xfc
@@ -47,7 +48,9 @@ void trapHandler(int signo, siginfo_t *info, void *context) {
     }
     
     printSyscall(eax, ebx, ecx, edx, esi, edi);
+    
   }
+  print_instruction(eip);
 }
 
 
@@ -80,6 +83,8 @@ void clearTrapFlag() {
 static struct sigaction trapSa;
 static struct sigaction exitSa;
 void startTrace() {
+  init_instruction_printer();
+  
   // set up trap signal handler
   trapSa.sa_flags = SA_SIGINFO;
   trapSa.sa_sigaction = trapHandler;
