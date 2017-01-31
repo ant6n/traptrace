@@ -3,7 +3,16 @@
 #include "helper.h"
 
 
-void writeInt(int v) {
+int  strLen(const char* s) {
+  int len = 0;
+  while (s[len] != 0) {
+    len++;
+  }
+  return len;
+}
+
+
+void fwriteInt(int f, int v) {
   static const int N = 20;
   char string[N];
   char* s = string + N;
@@ -21,7 +30,7 @@ void writeInt(int v) {
     *--s = '-';
   }
   int numChars = string + N - s;
-  write(STDOUT_FILENO, s, numChars);
+  write(f, s, numChars);
 }
 
 // given a number, returns a char representing its lowest hex digit
@@ -30,7 +39,7 @@ static char hexDigit(int h) {
   return ((h >= 10)?('a'-10):'0') + h;
 }
 
-void writeHex(int v) {
+void fwriteHex(int f, int v) {
   char s[10];
   s[0] = '0'; s[1] = 'x';
   int i;
@@ -38,19 +47,25 @@ void writeHex(int v) {
     int h = (v >> (i*4)) & 0xf;
     s[9-i] = hexDigit(h);
   }
-  write(STDOUT_FILENO, s, 10);
+  write(f, s, 10);
 }
 
-int  strLen(const char* s) {
-  int len = 0;
-  while (s[len] != 0) {
-    len++;
-  }
-  return len;
+void fwriteStr(int f, const char* s) {
+  write(f, s, strLen(s));
+}
+
+
+
+void writeInt(int v) {
+  fwriteInt(STDOUT_FILENO, v);
+}
+
+void writeHex(int v) {
+  fwriteHex(STDOUT_FILENO, v);
 }
 
 void writeStr(const char* s) {
-  write(STDOUT_FILENO, s, strLen(s));
+  fwriteStr(STDOUT_FILENO, s);
 }
 
 void writeStrEscaped(const char* s) {
@@ -81,4 +96,3 @@ void writeStrEscaped(const char* s) {
   }
   write(STDOUT_FILENO, buffer, t - buffer);
 }
-

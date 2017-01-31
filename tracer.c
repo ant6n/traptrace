@@ -8,6 +8,7 @@
 #include "helper.h"
 #include "syscallprinter.h"
 #include "instructionprinter.h"
+#include "stats.h"
 
 #define SYS_EXIT       0x01
 #define SYS_EXIT_GROUP 0xfc
@@ -32,6 +33,7 @@ void trapHandler(int signo, siginfo_t *info, void *context) {
       writeStr("[intercepted sys-exit. cycles: ");
       writeInt(ccycle);
       writeStr("\n");
+      write_stats();
     }
     
     if (eax == SYS_CLOSE && ebx == STDOUT_FILENO) { // don't allow closing std-out
@@ -50,15 +52,17 @@ void trapHandler(int signo, siginfo_t *info, void *context) {
     printSyscall(eax, ebx, ecx, edx, esi, edi);
     
   }
-  print_instruction(eip);
+  //print_instruction(eip);
+  record_stats(eip);
 }
 
 
 void exitHandler(int signo, siginfo_t *info, void *context) {
+  stopTrace();
   writeStr("exit handler, caught signal ");
   writeInt(signo);
   writeStr("\n");
-  stopTrace();
+  write_stats();
 }
 
 
@@ -84,6 +88,7 @@ static struct sigaction trapSa;
 static struct sigaction exitSa;
 void startTrace() {
   init_instruction_printer();
+  initialize_stats();
   
   // set up trap signal handler
   trapSa.sa_flags = SA_SIGINFO;
