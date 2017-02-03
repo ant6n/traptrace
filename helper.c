@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "helper.h"
+#include <fcntl.h>
 
 
 int  strLen(const char* s) {
@@ -68,7 +69,7 @@ void writeStr(const char* s) {
   fwriteStr(STDOUT_FILENO, s);
 }
 
-void writeStrEscaped(const char* s) {
+void fwriteStrEscaped(int f, const char* s) {
   static char buffer[MAX_NUM_WRITE_STR_ESCAPED_CHARS*4];
   char* t = buffer;
   int numChars = 0;
@@ -94,5 +95,15 @@ void writeStrEscaped(const char* s) {
       }
     }
   }
-  write(STDOUT_FILENO, buffer, t - buffer);
+  write(f, buffer, t - buffer);
+}
+
+
+// given a filename or '-', opens the file for writing or returns STDOUT_FILENO
+int open_or_stdout(char* filename) {
+  if (strLen(filename) == 1 && filename[0] == '-') {
+    return STDOUT_FILENO;
+  } else {
+    return open(filename, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR);
+  }
 }

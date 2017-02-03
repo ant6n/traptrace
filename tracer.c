@@ -6,8 +6,8 @@
 #include <unistd.h>
 #include "tracer.h"
 #include "helper.h"
-#include "syscallprinter.h"
-#include "instructionprinter.h"
+#include "syscalls.h"
+#include "instructions.h"
 #include "stats.h"
 
 #define SYS_EXIT       0x01
@@ -24,16 +24,13 @@ void trapHandler(int signo, siginfo_t *info, void *context) {
       )  {
     int eax = con->uc_mcontext.gregs[REG_EAX];
     int ebx = con->uc_mcontext.gregs[REG_EBX];
-    int ecx = con->uc_mcontext.gregs[REG_ECX];
-    int edx = con->uc_mcontext.gregs[REG_EDX];
-    int esi = con->uc_mcontext.gregs[REG_ESI];
-    int edi = con->uc_mcontext.gregs[REG_EDI];
     
     if (eax == SYS_EXIT || eax == SYS_EXIT_GROUP) {
       writeStr("[intercepted sys-exit. cycles: ");
       writeInt(ccycle);
       writeStr("\n");
-      write_stats();
+      finalize_stats();
+      finalize_syscalls();
     }
     
     if (eax == SYS_CLOSE && ebx == STDOUT_FILENO) { // don't allow closing std-out
@@ -49,10 +46,10 @@ void trapHandler(int signo, siginfo_t *info, void *context) {
       con->uc_mcontext.gregs[REG_EAX] = 0; // return close-success
     }
     
-    printSyscall(eax, ebx, ecx, edx, esi, edi);
+    record_syscall(context);
     
   }
-  //print_instruction(eip);
+  record_instruction(eip);
   record_stats(eip);
 }
 
@@ -62,7 +59,8 @@ void exitHandler(int signo, siginfo_t *info, void *context) {
   writeStr("exit handler, caught signal ");
   writeInt(signo);
   writeStr("\n");
-  write_stats();
+  finalize_stats();
+  finalize_syscalls();
 }
 
 
@@ -87,8 +85,9 @@ void clearTrapFlag() {
 static struct sigaction trapSa;
 static struct sigaction exitSa;
 void startTrace() {
-  init_instruction_printer();
+  initialize_instructions();
   initialize_stats();
+  initialize_syscalls();
   
   // set up trap signal handler
   trapSa.sa_flags = SA_SIGINFO;
@@ -111,7 +110,7 @@ void startTrace() {
 
 void stopTrace() {
   clearTrapFlag();
-
+  
   printf("cycles: %lld\n", ccycle);
 }
 

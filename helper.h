@@ -12,8 +12,11 @@ void writeHex(int v);
 void writeStr(const char* s);
 
 // write string while escaping it, prints at most max num chars
-void writeStrEscaped(const char* s);
+void fwriteStrEscaped(int f, const char* s);
 #define MAX_NUM_WRITE_STR_ESCAPED_CHARS 200
+
+// given a filename or '-', opens the file for writing or returns STDOUT_FILENO
+int open_or_stdout(char* filename);
 
 #endif /* __HELPER_H__ */
 

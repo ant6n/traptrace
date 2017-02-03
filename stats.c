@@ -1,33 +1,49 @@
 #include <stdint.h>
-#include "helper.h"
 #include <fcntl.h>
 #include <unistd.h>
-#include "instructionprinter.h"
+#include <stdlib.h>
+#include "helper.h"
+#include "instructions.h"
+#include "main.h"
 
 
 #define I16 (65536)
 static long long count_per_instruction[I16];
-
+static char* filename; // NULL means don't record
 
 void initialize_stats() {
+  filename = getenv(STATS_FILE);
+  if (filename == NULL) return;
+  
   for (int i = 0; i < I16; i++) {
     count_per_instruction[i] = 0;
   }
+  
+  writeStr("record stats to: ");
+  writeStr(filename);
+  writeStr("\n");
 }
 
 
 void record_stats(void* eip) {
+  if (!filename) return;
+  
   uint8_t* ip = (uint8_t*)eip;
   uint16_t instruction = (((uint16_t)ip[0]) << 8) + (((uint16_t)ip[1]) << 0);
   count_per_instruction[instruction]++;
 }
 
 
-void write_stats() {
+void finalize_stats() {
+  if (!filename) return;
+  
   uint8_t array[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   
-  writeStr("write on exit\n");
-  int f = open("stats.txt", O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR);
+  writeStr("write stats to '");
+  writeStr(filename);
+  writeStr("'\n");
+
+  int f = open_or_stdout(filename);
   if (f < 0) {
     writeStr("open failed\n");
   }
@@ -41,9 +57,9 @@ void write_stats() {
       array[0] = i >> 8;
       array[1] = i >> 0;
       fwrite_instruction(f, array, 0);
-      
-      //fwriteStr(f, "\n");
     }
   }
-  close(f);
+  if (f != STDOUT_FILENO) {
+    close(f);
+  }
 }

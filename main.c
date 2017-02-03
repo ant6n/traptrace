@@ -53,7 +53,7 @@ int main(int argc, char *const argv[], char *const envp1[]) {
     const char* s = argv[i];
     int len = strlen(s);
     
-    if (strcmp(s, "-h")==0 || strcmp(s, "--h")==0) {
+    if (strcmp(s, "-h")==0 || strcmp(s, "--help")==0) {
       printf("Help:  trap-trace\n"
              "traces through a program step by step, starting at __lib_start_main\n"
              "arguments:\n"
@@ -81,6 +81,9 @@ int main(int argc, char *const argv[], char *const envp1[]) {
       assert_has_file(i, argc, argv);
       envp2[env2_index++] = join_strings(STATS_FILE, argv[i+1]);
       i += 1;
+    } else if (s[0] == '-') {
+      printf("unkown option %s\n", s);
+      exit(EXIT_FAILURE);
     } else {
       break;
     }
@@ -90,6 +93,7 @@ int main(int argc, char *const argv[], char *const envp1[]) {
   
   envp2[env2_index++] = join_strings("LD_PRELOAD", OVERRIDE_LIB);
   char **const new_envp = merge_envp(envp1, envp2);
-  
+
+  printf("execute %s:\n", argv[i]);
   execve(argv[i], argv + i, new_envp);
 }

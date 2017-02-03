@@ -3,7 +3,7 @@
 
 void initialize_stats();
 void record_stats(void* eip);
-void write_stats();
+void finalize_stats();
 
-#endif /* __TRACER_H__ */
+#endif /* __STATS_H__ */
 
