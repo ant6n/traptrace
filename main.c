@@ -95,5 +95,8 @@ int main(int argc, char *const argv[], char *const envp1[]) {
   char **const new_envp = merge_envp(envp1, envp2);
 
   printf("execute %s:\n", argv[i]);
-  execve(argv[i], argv + i, new_envp);
+  if (execve(argv[i], argv + i, new_envp) < 0) {
+    printf("executing '%s' failed\n", argv[i]);
+    exit(EXIT_FAILURE);
+  }
 }
