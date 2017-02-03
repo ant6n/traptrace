@@ -1,3 +1,7 @@
 
-gcc -shared -fPIC  override.c tracer.c helper.c syscallprinter.c instructions.c stats.c syscalls.c -o override.so -ldl -ludis86
+gcc -shared -fPIC  \
+    src/override.c src/tracer.c src/helper.c src/syscallprinter.c\
+    src/instructions.c src/stats.c src/syscalls.c \
+    -o traptrace.so -ldl -ludis86
 
+gcc src/main.c -o traptrace
