@@ -25,7 +25,9 @@ void trapHandler(int signo, siginfo_t *info, void *context) {
   
   pid_t current_pid = getpid();
   if (current_pid != pid) {
-    writeStr("pid changed!\n");
+    writeStr("[new child process ");
+    writeInt(current_pid);
+    writeStr("]\n");
     pid = current_pid;
     con->uc_mcontext.gregs[REG_EFL] &= 0xfffffeff; // reset trap flag
   }
@@ -38,7 +40,7 @@ void trapHandler(int signo, siginfo_t *info, void *context) {
     if (eax == SYS_EXIT || eax == SYS_EXIT_GROUP) {
       writeStr("[intercepted sys-exit. cycles: ");
       writeInt(ccycle);
-      writeStr("\n");
+      writeStr("]\n");
       finalize_stats();
       finalize_syscalls();
     }
@@ -52,7 +54,7 @@ void trapHandler(int signo, siginfo_t *info, void *context) {
         con->uc_mcontext.gregs[REG_EIP] += 2;
         offset += 2;
       }
-      writeStr(")\n");
+      writeStr(")]\n");
       con->uc_mcontext.gregs[REG_EAX] = 0; // return close-success
     }
     
