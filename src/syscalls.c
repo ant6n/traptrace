@@ -19,9 +19,9 @@ void initialize_syscalls() {
     return;
   }
 
-  writeStr("record syscalls to: ");
+  writeStr("[record syscalls to: ");
   writeStr(filename);
-  writeStr("\n");
+  writeStr("]\n");
   
   f = open_or_stdout(filename);
   if (f < 0) {

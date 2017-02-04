@@ -5,3 +5,4 @@
 #define STATS_FILE ("___trap_trace_stats_file_")
 #define OVERRIDE_LIB ("./traptrace.so")
 
+#define LIBC_START_MAIN ("__libc_start_main")

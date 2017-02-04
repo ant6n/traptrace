@@ -18,9 +18,9 @@ void initialize_instructions() {
   if (filename == NULL) {
     f = -1;
   } else {
-    writeStr("record instructinos to: ");
+    writeStr("[record instructions to: ");
     writeStr(filename);
-    writeStr("\n");
+    writeStr("]\n");
     
     f = open_or_stdout(filename);
     if (f < 0) {

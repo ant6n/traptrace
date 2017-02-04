@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "main.h"
 #include <unistd.h>
+#include <errno.h>
+#include "main.h"
+
 
 static char* join_strings(char* const key, char* const value) {
   char* s = malloc(strlen(key) + strlen(value) + 2);
@@ -34,13 +36,38 @@ static char **const merge_envp(char *const envp1[], char *const envp2[]) {
     result[i] = envp1[i];
     i++;
   }
-  i = 0;
-  while (envp2[i] != NULL) {
-    result[i + num_env1] = envp2[i];
+  int j = 0;
+  while (envp2[j] != NULL) {
+    result[i] = envp2[j];
     i++;
+    j++;
   }
+  result[i] = NULL;
   return result;
 }
+
+
+#define LINE_LENGTH 2000
+static int has_libc_start_main(char* program) {
+char* cmd = malloc(sizeof(char)*(strlen(program) + 20));
+  sprintf(cmd, "nm -D %s", program);
+  FILE *fp = popen(cmd, "r");
+  if (fp == NULL) {
+    printf("cannot analyze program: %s\n", program);
+    exit(EXIT_FAILURE);
+  }
+
+  char line[LINE_LENGTH];
+  int found = 0;
+  while (fgets(line, LINE_LENGTH, fp)) {
+    if (strstr(line, LIBC_START_MAIN) != NULL) {
+      found = 1;
+    }
+  }
+  pclose(fp);
+  return found;
+}
+
 
 
 int main(int argc, char *const argv[], char *const envp1[]) {
@@ -90,13 +117,40 @@ int main(int argc, char *const argv[], char *const envp1[]) {
     
     i += 1;
   }
+
+  char* program = argv[i];
+  if (!has_libc_start_main(program)) {
+    printf("program '%s' does not have main to override (%s)\n", program, LIBC_START_MAIN);
+    exit(EXIT_FAILURE);
+  }
   
   envp2[env2_index++] = join_strings("LD_PRELOAD", OVERRIDE_LIB);
-  char **const new_envp = merge_envp(envp1, envp2);
-
-  printf("execute %s:\n", argv[i]);
-  if (execve(argv[i], argv + i, new_envp) < 0) {
-    printf("executing '%s' failed\n", argv[i]);
+  char**const new_envp = merge_envp(envp1, envp2);
+  
+  printf("[execute '%s']\n", program);
+  if (execve(program, argv + i, new_envp) < 0) {
+    printf("executing '%s' failed: ", argv[i]);
+    switch (errno) {
+    case E2BIG: printf("E2BIG"); break;
+    case EACCES: printf("EACCES"); break;
+    case EFAULT: printf("EFAULT"); break;
+    case EIO: printf("EIO"); break;
+    case EISDIR: printf("EISDIR"); break;
+    case ELIBBAD: printf("ELIBBAD"); break;
+    case ELOOP: printf("ELOOP"); break;
+    case EMFILE: printf("EMFILE"); break;
+    case ENAMETOOLONG: printf("ENAMETOOLONG"); break;
+    case ENFILE: printf("ENFILE"); break;
+    case ENOENT: printf("ENOENT"); break;
+    case ENOEXEC: printf("ENOEXEC"); break;
+    case ENOMEM: printf("ENOMEM"); break;
+    case ENOTDIR: printf("ENOTDIR"); break;
+    case EPERM: printf("EPERM"); break;
+    case ETXTBSY: printf("ETXTBSY"); break;
+    default:
+      printf("unknown error");
+    }
+    printf("\n");
     exit(EXIT_FAILURE);
   }
 }

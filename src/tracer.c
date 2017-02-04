@@ -98,9 +98,9 @@ static struct sigaction trapSa;
 static struct sigaction exitSa;
 void startTrace() {
   pid = getpid();
-  writeStr("start with PID: ");
+  writeStr("[start with PID: ");
   writeInt(pid);
-  writeStr("\n");
+  writeStr("]\n");
   
   initialize_instructions();
   initialize_stats();
@@ -114,12 +114,12 @@ void startTrace() {
   // set up exit signal handler
   exitSa.sa_flags = SA_SIGINFO;
   exitSa.sa_sigaction = exitHandler;
-  sigaction(SIGTERM, &exitSa, NULL);
-  sigaction(SIGQUIT, &exitSa, NULL);
-  sigaction(SIGINT,  &exitSa, NULL);
-  sigaction(SIGSTOP, &exitSa, NULL);
-  sigaction(SIGHUP,  &exitSa, NULL);
-  sigaction(SIGABRT, &exitSa, NULL);
+  //sigaction(SIGTERM, &exitSa, NULL);
+  //sigaction(SIGQUIT, &exitSa, NULL);
+  //sigaction(SIGINT,  &exitSa, NULL);
+  //sigaction(SIGSTOP, &exitSa, NULL);
+  //sigaction(SIGHUP,  &exitSa, NULL);
+  //sigaction(SIGABRT, &exitSa, NULL);
   
   setTrapFlag();
 }
