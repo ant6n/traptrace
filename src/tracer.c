@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include "tracer.h"
 #include "helper.h"
 #include "syscalls.h"
@@ -14,11 +15,20 @@
 #define SYS_EXIT_GROUP 0xfc
 #define SYS_CLOSE      0x06
 
+static pid_t pid;
+
 long long int ccycle = 0;
 void trapHandler(int signo, siginfo_t *info, void *context) {
   ucontext_t *con = (ucontext_t *)context;
   uint8_t* eip = (uint8_t*)con->uc_mcontext.gregs[REG_EIP];
   ccycle++;
+  
+  pid_t current_pid = getpid();
+  if (current_pid != pid) {
+    writeStr("pid changed!\n");
+    pid = current_pid;
+    con->uc_mcontext.gregs[REG_EFL] &= 0xfffffeff; // reset trap flag
+  }
   if ((   eip[0] == 0xcd && eip[1] == 0x80) // int 0x80
       || (eip[0] == 0x0f && eip[1] == 0x34) // sysenter
       )  {
@@ -85,6 +95,11 @@ void clearTrapFlag() {
 static struct sigaction trapSa;
 static struct sigaction exitSa;
 void startTrace() {
+  pid = getpid();
+  writeStr("start with PID: ");
+  writeInt(pid);
+  writeStr("\n");
+  
   initialize_instructions();
   initialize_stats();
   initialize_syscalls();
